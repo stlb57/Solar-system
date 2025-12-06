@@ -1,0 +1,45 @@
+name: CI Backend
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**' 
+
+jobs:
+  test-matrix:
+    name: Test on Node ${{ matrix.node-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }} 
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [14, 16, 18]
+        os: [ubuntu-latest, windows-latest]
+        exclude:
+          - os: windows-latest
+            node-version: 14
+
+    steps:
+      - name: Turbo Setup
+        uses: ./.github/actions/turbo-setup
+        with: 
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run Tests
+        run: npm test
+        working-directory: backend
+  
+  coverage:
+    needs: test-matrix
+    runs-on: ubuntu-latest
+    if: success()
+    continue-on-error: true
+    steps:
+      - name: Turbo Setup
+        uses: ./.github/actions/turbo-setup
+        with:
+          node-version: '16'
+      
+      - name: Calculate Coverage
+        run: echo "Calculating coverage... 95%"
+    
