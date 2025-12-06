@@ -1,0 +1,33 @@
+name: Deploy Gate
+
+on:
+  workflow_call:
+    inputs:
+      environment-name:
+        description: 'Target Environment'
+        required: true
+        type: string
+      artifact-name:
+        description: 'Artifact to deploy'
+        required: true
+        type: string
+    secrets:
+      aws-role-arn:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment-name }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment-name }} 
+    
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+
+      - name: Simulate Deployment
+        run: echo "Deploying artifact ${{ inputs.artifact-name }} to ${{ inputs.environment-name }}..."
+
+      - name: Simulate Authentication
+        run: echo "Authenticating with role ${{ secrets.aws-role-arn }}..."

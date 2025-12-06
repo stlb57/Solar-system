@@ -1,0 +1,58 @@
+name: CI Frontend
+
+permissions: read-all
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+
+jobs:
+  build-react:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Turbo + Node
+        uses: ./.github/actions/turbo-setup
+        with:
+          node-version: '18'
+
+      - name: Build React
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: frontend/dist
+
+  deploy-staging:
+    needs: build-react
+    uses: ./.github/workflows/deploy-gate.yml
+    with:
+      environment-name: staging
+      artifact-name: react-build
+    secrets:
+      aws-role-arn: arn:aws:iam::123456789012:role/staging-role
+
+  deploy-production:
+    needs: deploy-staging
+    uses: ./.github/workflows/deploy-gate.yml
+    with:
+      environment-name: production
+      artifact-name: react-build
+    secrets:
+      aws-role-arn: arn:aws:iam::123456789012:role/production-role
+
+  rollback:
+    needs: [deploy-staging, deploy-production]
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Rollback
+        run: echo "MISSION ABORT! One of the deployments failed."
+        shell: bash 
