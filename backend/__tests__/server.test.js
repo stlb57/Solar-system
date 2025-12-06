@@ -5,9 +5,7 @@ describe('Telemetry Service', () => {
   });
 
   // Uncomment this to simulate a failure for Module 7 (Conditionals)
-  /*
   test('Simulate Failure', () => {
     expect(true).toBe(false);
   });
-  */
 });
